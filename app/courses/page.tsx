@@ -113,7 +113,7 @@ export default function CoursesPage() {
         <span>#</span>
         <span>lesson</span>
         <span>focus</span>
-        <span style={{ textAlign: 'right' }}>start</span>
+        <span >start</span>
       </div>
 
       {/* Lessons */}

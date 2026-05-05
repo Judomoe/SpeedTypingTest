@@ -11,7 +11,7 @@ const DATA = [
   { rank: 7, name: 'mech_beast', wpm: 171, acc: 95.5, country: '🇸🇪', tests: 3020 },
   { rank: 8, name: 'liquidkeys', wpm: 168, acc: 96.3, country: '🇫🇷', tests: 2100 },
   { rank: 9, name: 'precision99', wpm: 162, acc: 97.8, country: '🇨🇦', tests: 5500 },
-  { rank: 10, name: 'you', wpm: 94, acc: 97.0, country: '🇪🇬', tests: 31, isYou: true },
+  { rank: 10, name: 'Moustafa Ahmed', wpm: 94, acc: 97.0, country: '🇪🇬', tests: 31, isYou: true },
 ]
 
 const MEDAL = ['🥇', '🥈', '🥉']

@@ -47,7 +47,7 @@ export default function Home() {
             lineHeight: 1, letterSpacing: '-0.04em',
             color: '#f0f0f8', marginBottom: 20,
           }}>
-            Type faster.<br />
+            <span style={{ color: '#e8ff57' }}>Type Faster</span><br />
             <span style={{ color: '#e8ff57' }}>Think sharper.</span>
           </h1>
 
@@ -149,7 +149,7 @@ export default function Home() {
         </section>
 
         {/* CTA */}
-        <section style={{ maxWidth: 700, margin: '0 auto', padding: '0 24px 120px', textAlign: 'center' }}>
+        <section style={{ maxWidth: 600, margin: '0 auto', padding: '0 24px 120px', textAlign: 'center' }}>
           <div style={{
             background: 'linear-gradient(135deg, rgba(232,255,87,0.06) 0%, rgba(87,255,216,0.06) 100%)',
             border: '1px solid rgba(232,255,87,0.15)', borderRadius: 20, padding: '60px 40px',
