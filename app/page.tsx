@@ -67,6 +67,8 @@ export default function Home() {
             }}>
               Start typing free →
             </Link>
+
+
             <Link href="/courses" style={{
               padding: '14px 32px', borderRadius: 12,
               fontFamily: 'Outfit, sans-serif', fontWeight: 600, fontSize: 16,
@@ -77,6 +79,7 @@ export default function Home() {
               Browse courses
             </Link>
           </div>
+          
         </section>
 
         {/* Stats */}

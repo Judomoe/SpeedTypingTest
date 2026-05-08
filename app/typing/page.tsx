@@ -136,7 +136,8 @@ function TypingInner() {
     setTimeout(() => inputRef.current?.focus(), 50)
   }, [time, mode, lessonId, lessonTab])
 
-  useEffect(() => { reset() }, [time])
+  // triggers a clean reset WITH the new text when changing categories.
+  useEffect(() => { reset() }, [time, mode, reset])
 
   useEffect(() => {
     const handleKey = (e: KeyboardEvent) => {
@@ -153,7 +154,8 @@ function TypingInner() {
         const currentTyped = typedRef.current
         const currentText = textRef.current
 
-        const charsThisSec = currentTyped.length - prevTypedLenRef.current
+        const charsThisSec = Math.max(0, currentTyped.length - prevTypedLenRef.current)
+        
         let correctThisSec = 0
         for (let i = prevTypedLenRef.current; i < Math.min(currentTyped.length, currentText.length); i++) {
           if (currentTyped[i] === currentText[i]) correctThisSec++
@@ -170,7 +172,7 @@ function TypingInner() {
         elapsedRef.current++
 
         setLeft(l => {
-          if (l <= 1) {
+          if (!lessonId && l <= 1) {
             clearInterval(timerRef.current!)
             setDone(true)
             return 0
@@ -180,7 +182,7 @@ function TypingInner() {
       }, 1000)
     }
     return () => { if (timerRef.current) clearInterval(timerRef.current) }
-  }, [started, done])
+  }, [started, done, lessonId])
 
   // Live WPM/acc/errors update
   useEffect(() => {
@@ -242,13 +244,16 @@ function TypingInner() {
   const onInput = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (done) return
     const val = e.target.value
+    
     if (val.length > text.length) return
-    // Ignore spaces pressed before typing has begun
+    
     if (!started && val.trim() === '') return
     if (!started && val.length > 0) setStarted(true)
+    
     typedRef.current = val
     setTyped(val)
-    if (val.length >= text.length) {
+    
+    if (val.length === text.length) {
       if (timerRef.current) clearInterval(timerRef.current)
       setDone(true)
     }
@@ -272,12 +277,12 @@ function TypingInner() {
           </div>
         )}
 
-        {/* Mode + Time selectors (hidden in lesson mode) */}
+        {/* Mode + Time selectors */}
         {!lessonId && (
           <div style={{ display: 'flex', justifyContent: 'center', gap: 32, marginBottom: 48 }}>
             <div style={{ display: 'flex', gap: 2, background: '#131318', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 10, padding: 3 }}>
               {MODES.map(m => (
-                <button key={m} onClick={() => { setMode(m); reset() }} style={{
+                <button key={m} onClick={() => setMode(m)} style={{
                   padding: '7px 16px', borderRadius: 7, border: 'none', cursor: 'pointer',
                   fontFamily: 'JetBrains Mono, monospace', fontSize: 13,
                   background: mode === m ? 'rgba(232,255,87,0.1)' : 'transparent',
@@ -301,7 +306,7 @@ function TypingInner() {
         {/* Stats bar */}
         <div style={{ display: 'flex', gap: 48, marginBottom: 32, justifyContent: 'center' }}>
           {[
-            { val: left, label: 'seconds', color: started && left < 10 ? '#ff6b6b' : '#57ffd8' },
+            ...(!lessonId ? [{ val: left, label: 'seconds', color: started && left < 10 ? '#ff6b6b' : '#57ffd8' }] : []),
             { val: wpm, label: 'wpm', color: '#e8ff57' },
             { val: `${acc}%`, label: 'acc', color: acc < 90 ? '#ff6b6b' : '#f0f0f8' },
             { val: errors, label: 'errors', color: errors > 0 ? '#ff6b6b' : '#55556a' },
@@ -372,7 +377,7 @@ function TypingInner() {
 
         {/* Controls */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 16, marginTop: 24 }}>
-          <button onClick={reset} style={{
+          <button onClick={() => reset()} style={{
             display: 'flex', alignItems: 'center', gap: 8,
             padding: '10px 20px', borderRadius: 10,
             background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)',
@@ -381,10 +386,6 @@ function TypingInner() {
             ↻ reset <span style={{ fontSize: 11, color: '#55556a', padding: '2px 6px', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 4 }}>tab</span>
           </button>
         </div>
-
-        <p style={{ textAlign: 'center', marginTop: 20, fontFamily: 'JetBrains Mono, monospace', fontSize: 12, color: '#55556a' }}>
-          press <kbd style={{ padding: '2px 6px', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 4, color: '#9090a8' }}>tab</kbd> to restart
-        </p>
       </div>
     </div>
   )
