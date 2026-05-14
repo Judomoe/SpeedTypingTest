@@ -16,6 +16,44 @@ function formatDate(iso: string): string {
   return d.toLocaleDateString()
 }
 
+function getPracticeGoal(history: TestResult[], avgWpm: number, avgAcc: number) {
+  const latest = history[0]
+  const recent = history.slice(0, 5)
+  const recentAvg = recent.length
+    ? Math.round(recent.reduce((sum, test) => sum + test.wpm, 0) / recent.length)
+    : avgWpm
+  const recentErrors = recent.reduce((sum, test) => sum + test.errors, 0)
+  const targetWpm = Math.max(avgWpm + 5, recentAvg + 3, 35)
+
+  if (avgAcc < 90 || recentErrors >= 20) {
+    return {
+      title: 'Accuracy reset',
+      focus: 'Run two 30s quote tests and slow down until accuracy stays above 95%.',
+      target: `${Math.max(avgAcc + 5, 95)}% accuracy`,
+      mode: 'quotes',
+      duration: 30,
+    }
+  }
+
+  if (latest?.mode !== 'code' && avgWpm >= 45) {
+    return {
+      title: 'Code control',
+      focus: 'Add one code test to practice punctuation, casing, and rhythm under pressure.',
+      target: `${Math.max(25, avgWpm - 15)} WPM in code`,
+      mode: 'code',
+      duration: 60,
+    }
+  }
+
+  return {
+    title: 'Speed build',
+    focus: 'Repeat 60s word tests and aim for a small personal best without sacrificing accuracy.',
+    target: `${targetWpm} WPM`,
+    mode: 'words',
+    duration: 60,
+  }
+}
+
 export default function ProfilePage() {
   const router = useRouter()
   const [tab, setTab] = useState('stats')
@@ -70,6 +108,7 @@ export default function ProfilePage() {
   // Member since
   const joined = new Date(user.createdAt)
   const joinedStr = joined.toLocaleDateString('en-US', { year: 'numeric', month: 'long' })
+  const practiceGoal = getPracticeGoal(history, avgWpm, avgAcc)
 
   return (
     <div style={{ minHeight: '100vh', maxWidth: 900, margin: '0 auto', padding: '80px 24px 60px' }}>
@@ -134,6 +173,27 @@ export default function ProfilePage() {
             </div>
           ) : (
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+              {/* Practice focus */}
+              <div style={{ gridColumn: '1 / -1', background: 'linear-gradient(135deg, rgba(232,255,87,0.08), rgba(87,255,216,0.05))', border: '1px solid rgba(232,255,87,0.14)', borderRadius: 14, padding: 24, display: 'grid', gridTemplateColumns: '1fr auto', gap: 20, alignItems: 'center' }}>
+                <div>
+                  <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 12, color: '#e8ff57', marginBottom: 8 }}>recommended practice</div>
+                  <h2 style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 800, fontSize: 24, letterSpacing: '-0.02em', marginBottom: 8 }}>{practiceGoal.title}</h2>
+                  <p style={{ fontFamily: 'DM Sans, sans-serif', fontSize: 15, color: '#9090a8', lineHeight: 1.6 }}>{practiceGoal.focus}</p>
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(72px, 1fr))', gap: 10, minWidth: 260 }}>
+                  {[
+                    [practiceGoal.target, 'target'],
+                    [practiceGoal.mode, 'mode'],
+                    [`${practiceGoal.duration}s`, 'time'],
+                  ].map(([value, label]) => (
+                    <div key={label} style={{ background: 'rgba(12,12,16,0.5)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 10, padding: '12px 10px', textAlign: 'center' }}>
+                      <div style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 800, fontSize: 18, color: '#e8ff57', marginBottom: 3 }}>{value}</div>
+                      <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 10, color: '#55556a' }}>{label}</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
               {/* Weekly chart */}
               <div style={{ background: '#131318', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 14, padding: 24 }}>
                 <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 13, color: '#9090a8', marginBottom: 20 }}>avg wpm — last 7 days</div>
