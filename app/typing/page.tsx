@@ -200,43 +200,48 @@ function TypingInner() {
   useEffect(() => {
     if (!done || !started) return
 
-    const finalTyped = typedRef.current
-    const finalText = textRef.current
-    const elapsed = Math.max(1, elapsedRef.current)
+    async function finishTest() {
+      const finalTyped = typedRef.current
+      const finalText = textRef.current
+      const elapsed = Math.max(1, elapsedRef.current)
 
-    let correct = 0, incorrect = 0, missed = 0
-    for (let i = 0; i < finalText.length; i++) {
-      if (i < finalTyped.length) {
-        if (finalTyped[i] === finalText[i]) correct++
-        else incorrect++
-      } else {
-        missed++
+      let correct = 0, incorrect = 0, missed = 0
+      for (let i = 0; i < finalText.length; i++) {
+        if (i < finalTyped.length) {
+          if (finalTyped[i] === finalText[i]) correct++
+          else incorrect++
+        } else {
+          missed++
+        }
       }
+      const extra = Math.max(0, finalTyped.length - finalText.length)
+      const finalWpm = Math.round((correct / 5) / (elapsed / 60))
+      const finalAcc = finalTyped.length > 0 ? Math.round((correct / finalTyped.length) * 100) : 100
+      const rawWpm = Math.round((finalTyped.length / 5) / (elapsed / 60))
+
+      const wpmArr = wpmPerSecRef.current.filter(v => v >= 0)
+      const avg = wpmArr.length > 0 ? wpmArr.reduce((a, b) => a + b, 0) / wpmArr.length : 0
+      const variance = wpmArr.length > 1
+        ? wpmArr.reduce((a, b) => a + Math.pow(b - avg, 2), 0) / wpmArr.length
+        : 0
+      const consistency = avg > 0 ? Math.round(Math.max(0, 100 - (Math.sqrt(variance) / avg) * 100)) : 100
+
+      const result = {
+        wpm: finalWpm, rawWpm, acc: finalAcc, consistency,
+        errors: incorrect, correct, incorrect: incorrect, extra, missed,
+        dur: elapsed, mode,
+        wpmData: wpmPerSecRef.current,
+        rawData: rawPerSecRef.current,
+        errData: errAtSecRef.current,
+      }
+
+      try { sessionStorage.setItem('tc_result', JSON.stringify(result)) } catch { /* ignore */ }
+      const saveStatus = await saveTestResult(result)
+      try { sessionStorage.setItem('tc_save_status', JSON.stringify(saveStatus)) } catch { /* ignore */ }
+      router.push('/results')
     }
-    const extra = Math.max(0, finalTyped.length - finalText.length)
-    const finalWpm = Math.round((correct / 5) / (elapsed / 60))
-    const finalAcc = finalTyped.length > 0 ? Math.round((correct / finalTyped.length) * 100) : 100
-    const rawWpm = Math.round((finalTyped.length / 5) / (elapsed / 60))
 
-    const wpmArr = wpmPerSecRef.current.filter(v => v >= 0)
-    const avg = wpmArr.length > 0 ? wpmArr.reduce((a, b) => a + b, 0) / wpmArr.length : 0
-    const variance = wpmArr.length > 1
-      ? wpmArr.reduce((a, b) => a + Math.pow(b - avg, 2), 0) / wpmArr.length
-      : 0
-    const consistency = avg > 0 ? Math.round(Math.max(0, 100 - (Math.sqrt(variance) / avg) * 100)) : 100
-
-    const result = {
-      wpm: finalWpm, rawWpm, acc: finalAcc, consistency,
-      errors: incorrect, correct, incorrect: incorrect, extra, missed,
-      dur: elapsed, mode,
-      wpmData: wpmPerSecRef.current,
-      rawData: rawPerSecRef.current,
-      errData: errAtSecRef.current,
-    }
-
-    try { sessionStorage.setItem('tc_result', JSON.stringify(result)) } catch { /* ignore */ }
-    saveTestResult(result)
-    router.push('/results')
+    finishTest()
   }, [done, started, mode, router])
 
   const onInput = (e: React.ChangeEvent<HTMLInputElement>) => {

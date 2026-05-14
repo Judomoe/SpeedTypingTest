@@ -16,12 +16,12 @@ export default function RegisterPage() {
   const sColors = ['#55556a', '#ff6b6b', '#e8ff57', '#57ffd8', '#57ffd8']
   const sLabels = ['', 'weak', 'fair', 'good', 'strong']
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
     if (!username || !email || !pw) { setError('Please fill in all fields'); return }
     setLoading(true)
-    const result = registerUser(username, email, pw)
+    const result = await registerUser(username, email, pw)
     setLoading(false)
     if (!result.success) { setError(result.error || 'Registration failed'); return }
     router.push('/')

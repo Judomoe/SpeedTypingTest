@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { getSession, getTestHistory, type AuthUser, type TestResult } from '@/lib/auth-client'
+import { getProfile, getSession, type AuthUser, type TestResult } from '@/lib/auth-client'
 
 const DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
 
@@ -59,12 +59,28 @@ export default function ProfilePage() {
   const [tab, setTab] = useState('stats')
   const [user, setUser] = useState<AuthUser | null>(null)
   const [history, setHistory] = useState<TestResult[]>([])
+  const [loading, setLoading] = useState(true)
+  const [syncError, setSyncError] = useState('')
 
   useEffect(() => {
-    const u = getSession()
-    if (!u) { router.push('/login'); return }
-    setUser(u)
-    setHistory(getTestHistory())
+    let alive = true
+
+    async function loadProfile() {
+      const u = getSession()
+      if (!u) { router.push('/login'); return }
+
+      setUser(u)
+      const profile = await getProfile()
+      if (!alive) return
+
+      if (profile.user) setUser(profile.user)
+      setHistory(profile.scores)
+      if (!profile.success) setSyncError(profile.error)
+      setLoading(false)
+    }
+
+    loadProfile()
+    return () => { alive = false }
   }, [router])
 
   if (!user) return null
@@ -149,6 +165,18 @@ export default function ProfilePage() {
           ))}
         </div>
       </div>
+
+      {syncError && (
+        <div style={{ marginBottom: 18, padding: '12px 16px', borderRadius: 10, border: '1px solid rgba(255,107,107,0.2)', background: 'rgba(255,107,107,0.06)', fontFamily: 'JetBrains Mono, monospace', fontSize: 12, color: '#ff6b6b' }}>
+          Backend sync issue: {syncError}
+        </div>
+      )}
+
+      {loading && (
+        <div style={{ marginBottom: 18, padding: '12px 16px', borderRadius: 10, border: '1px solid rgba(232,255,87,0.14)', background: 'rgba(232,255,87,0.05)', fontFamily: 'JetBrains Mono, monospace', fontSize: 12, color: '#e8ff57' }}>
+          Loading profile from backend…
+        </div>
+      )}
 
       {/* Tabs */}
       <div style={{ display: 'flex', gap: 4, marginBottom: 24, background: '#131318', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 10, padding: 4, width: 'fit-content' }}>

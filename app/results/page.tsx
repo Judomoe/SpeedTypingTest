@@ -110,11 +110,14 @@ function ResultsInner() {
   const router = useRouter()
   const [result, setResult] = useState<Result | null>(null)
   const [user, setUser] = useState(getSession())
+  const [saveStatus, setSaveStatus] = useState<{ success: boolean; error?: string } | null>(null)
 
   useEffect(() => {
     try {
       const raw = sessionStorage.getItem('tc_result')
       if (raw) setResult(JSON.parse(raw))
+      const saved = sessionStorage.getItem('tc_save_status')
+      if (saved) setSaveStatus(JSON.parse(saved))
     } catch { /* ignore */ }
     setUser(getSession())
   }, [])
@@ -252,9 +255,11 @@ function ResultsInner() {
 
           {/* Auth prompt / saved */}
           <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 13, color: '#55556a' }}>
-            {user
-              ? <span style={{ color: '#57ffd8' }}>✓ result saved to your profile</span>
-              : <span><Link href="/login" style={{ color: '#e8ff57', textDecoration: 'none' }}>Sign in</Link> to save your result</span>
+            {saveStatus?.success
+              ? <span style={{ color: '#57ffd8' }}>✓ result saved to MongoDB Atlas</span>
+              : user
+                ? <span style={{ color: '#ff6b6b' }}>Result kept locally. Backend sync failed.</span>
+                : <span><Link href="/login" style={{ color: '#e8ff57', textDecoration: 'none' }}>Sign in</Link> to sync results to MongoDB Atlas</span>
             }
           </div>
         </div>

@@ -11,12 +11,12 @@ export default function LoginPage() {
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
     if (!email || !pw) { setError('Please fill in all fields'); return }
     setLoading(true)
-    const result = loginUser(email, pw)
+    const result = await loginUser(email, pw)
     setLoading(false)
     if (!result.success) { setError(result.error || 'Login failed'); return }
     router.push('/')

@@ -14,9 +14,9 @@
 |---|---|
 | Frontend | Next.js 14 + React 18 + TypeScript |
 | Styling | Tailwind CSS + inline CSS variables |
-| Backend | Next.js API Routes (RESTful) |
+| Backend | Node.js + Express REST API |
 | Database | MongoDB via Mongoose (Atlas free tier) |
-| Auth | NextAuth.js + bcryptjs |
+| Auth | JWT + bcryptjs |
 | Realtime | Socket.io (multiplayer) |
 | Animations | Framer Motion |
 
@@ -41,10 +41,13 @@
 
 | Method | Path | Description |
 |---|---|---|
-| POST | `/api/auth` | Register or login |
-| POST | `/api/scores` | Save test result |
-| GET | `/api/scores?userId=` | Get user history |
-| GET | `/api/leaderboard` | Top 100 players |
+| POST | `/api/auth/register` | Create account |
+| POST | `/api/auth/login` | Sign in and receive JWT |
+| GET | `/api/auth/me` | Validate current session |
+| POST | `/api/scores` | Save authenticated test result |
+| GET | `/api/scores/me` | Get current user history |
+| GET | `/api/profile/me` | Get profile + recent scores |
+| GET | `/api/leaderboard?period=&mode=` | Top 100 players |
 
 ## Database Schema
 
@@ -69,11 +72,19 @@ npm install
 # 2. Setup env
 cp .env.local.example .env.local
 # → Paste your MongoDB Atlas URI
+# → Set JWT_SECRET to a long random value
 
 # 3. Run dev
 npm run dev
-# → http://localhost:3000
+# → Frontend: http://localhost:3000
+# → Backend:  http://localhost:4000/api/health
 ```
+
+## Backend Notes
+
+The frontend reads `NEXT_PUBLIC_API_URL` from `.env.local` and calls the Express API.
+The backend reads `MONGODB_URI`, `JWT_SECRET`, `PORT`, and `CLIENT_ORIGIN`.
+Do not commit `.env.local`; it should contain the real MongoDB Atlas connection string.
 
 ## Deploy (Bonus marks!)
 
