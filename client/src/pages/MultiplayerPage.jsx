@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useCallback } from 'react'
 import { io } from 'socket.io-client'
 import { useAuth } from '../context/AuthContext'
 
-const SERVER = 'http://localhost:4000'
+const SERVER = 'http://YOUR-RAILWAY-URL.up.railway.app'
 
 const DIFF_C = { easy: '#57ffd8', medium: '#e8ff57', hard: '#ff6b6b' }
 
