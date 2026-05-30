@@ -1,11 +1,7 @@
 import { Link } from 'react-router-dom'
 import { useState, useEffect } from 'react'
 
-const STATS = [
-  { target: 280, suffix: 'K+', label: 'active typists' },
-  { target: 12, suffix: 'M+', label: 'tests completed' },
-  { target: 147, suffix: ' WPM', label: 'record speed' },
-]
+const API = 'https://speedtypingtest-production.up.railway.app/api'
 
 const FEATURES = [
   { icon: '⚡', title: 'Speed Tests', desc: 'Word, quote, code, and zen modes. 15s to 5min. Real-time WPM & accuracy.', href: '/typing', color: '#e8ff57' },
@@ -14,28 +10,26 @@ const FEATURES = [
   { icon: '🏆', title: 'Global Ranks', desc: 'Daily, weekly, all-time boards. Climb the ladder. Earn badges.', href: '/leaderboard', color: '#ff6b6b' },
 ]
 
-// Ease-out cubic: rockets through the start, decelerates into the final number
 function AnimatedStat({ target, suffix, label }) {
   const [count, setCount] = useState(0)
 
   useEffect(() => {
+    if (!target) return
     const duration = 2000
     const startTime = performance.now()
-
     const tick = (now) => {
       const progress = Math.min((now - startTime) / duration, 1)
       const eased = 1 - Math.pow(1 - progress, 3)
       setCount(Math.ceil(eased * target))
       if (progress < 1) requestAnimationFrame(tick)
     }
-
     requestAnimationFrame(tick)
   }, [target])
 
   return (
     <div style={{ textAlign: 'center' }}>
       <div style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 800, fontSize: 44, color: '#e8ff57', letterSpacing: '-0.03em' }}>
-        {count}{suffix}
+        {target ? `${count}${suffix}` : '—'}
       </div>
       <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 13, color: '#55556a', marginTop: 4 }}>
         {label}
@@ -45,32 +39,41 @@ function AnimatedStat({ target, suffix, label }) {
 }
 
 export default function Home() {
-  // Hide CTA section when user is logged in
-  // Change 'authToken' to whatever key your auth system stores
   const [isLoggedIn, setIsLoggedIn] = useState(false)
+  const [recordWpm, setRecordWpm] = useState(0)
 
   useEffect(() => {
-    const token = localStorage.getItem('tc_session')
-    setIsLoggedIn(!!token)
+    setIsLoggedIn(!!localStorage.getItem('tc_session'))
+
+    // Fetch real record speed from leaderboard #1
+    fetch(`${API}/leaderboard?mode=words&period=all`)
+      .then(r => r.json())
+      .then(d => {
+        if (d.leaders && d.leaders.length > 0) {
+          setRecordWpm(d.leaders[0].wpm)
+        }
+      })
+      .catch(() => setRecordWpm(147)) // fallback if server offline
   }, [])
+
+  const STATS = [
+    { target: 280, suffix: 'K+', label: 'active typists' },
+    { target: 12,  suffix: 'M+', label: 'tests completed' },
+    { target: recordWpm, suffix: ' WPM', label: 'record speed' },
+  ]
 
   return (
     <div style={{ minHeight: '100vh', paddingTop: 60 }}>
-
       <style>{`
-        /* ── Feature cards: pop-out on hover ── */
         .feature-card {
           transition: transform 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.4),
-                      border-color 0.3s ease,
-                      box-shadow 0.3s ease;
+                      border-color 0.3s ease, box-shadow 0.3s ease;
         }
         .feature-card:hover {
           transform: scale(1.06) translateY(-6px);
           border-color: var(--card-color) !important;
           box-shadow: 0 20px 40px -12px var(--card-glow);
         }
-
-        /* ── Primary button: pop-out + yellow glow ── */
         .btn-primary {
           transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.4), box-shadow 0.3s ease;
           display: inline-block;
@@ -79,8 +82,6 @@ export default function Home() {
           transform: scale(1.07) translateY(-3px);
           box-shadow: 0 12px 28px -8px rgba(232, 255, 87, 0.65);
         }
-
-        /* ── Secondary button: pop-out + subtle glow ── */
         .btn-secondary {
           transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.4), box-shadow 0.3s ease, border-color 0.3s ease;
           display: inline-block;
@@ -90,8 +91,6 @@ export default function Home() {
           border-color: rgba(255,255,255,0.25) !important;
           box-shadow: 0 12px 28px -8px rgba(255, 255, 255, 0.18);
         }
-
-        /* ── CTA card: pop-out on hover ── */
         .cta-card {
           transition: transform 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.4), box-shadow 0.3s ease;
         }
@@ -147,7 +146,7 @@ export default function Home() {
           </div>
         </section>
 
-        {/* Stats — eased count-up */}
+        {/* Stats — animated count-up, record speed from live API */}
         <section style={{ display: 'flex', justifyContent: 'center', gap: 64, padding: '0 24px 80px', flexWrap: 'wrap' }}>
           {STATS.map(s => (
             <AnimatedStat key={s.label} target={s.target} suffix={s.suffix} label={s.label} />
@@ -182,7 +181,6 @@ export default function Home() {
           </div>
         </section>
 
-        {/* Features — pop-out on hover */}
         <section style={{ maxWidth: 1100, margin: '0 auto', padding: '0 24px 120px' }}>
           <div style={{ textAlign: 'center', marginBottom: 64 }}>
             <h2 style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 800, fontSize: 44, letterSpacing: '-0.03em', marginBottom: 12 }}>Everything in one place</h2>
@@ -210,16 +208,12 @@ export default function Home() {
           </div>
         </section>
 
-        {/* CTA — hidden when logged in, pop-out on hover */}
         {!isLoggedIn && (
           <section style={{ maxWidth: 600, margin: '0 auto', padding: '0 24px 120px', textAlign: 'center' }}>
-            <div
-              className="cta-card"
-              style={{
-                background: 'linear-gradient(135deg, rgba(232,255,87,0.06) 0%, rgba(87,255,216,0.06) 100%)',
-                border: '1px solid rgba(232,255,87,0.15)', borderRadius: 20, padding: '60px 40px',
-              }}
-            >
+            <div className="cta-card" style={{
+              background: 'linear-gradient(135deg, rgba(232,255,87,0.06) 0%, rgba(87,255,216,0.06) 100%)',
+              border: '1px solid rgba(232,255,87,0.15)', borderRadius: 20, padding: '60px 40px',
+            }}>
               <h2 style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 800, fontSize: 40, letterSpacing: '-0.03em', marginBottom: 16 }}>Ready to level up?</h2>
               <p style={{ color: '#9090a8', marginBottom: 32, fontSize: 17 }}>Free forever. No credit card needed.</p>
               <Link to="/register" className="btn-primary" style={{
