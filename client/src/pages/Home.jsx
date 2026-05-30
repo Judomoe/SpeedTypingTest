@@ -22,7 +22,7 @@ function AnimatedStat({ target, suffix, label }) {
     const duration = 2000
     const startTime = performance.now()
 
-    const tick = (now: number) => {
+    const tick = (now) => {
       const progress = Math.min((now - startTime) / duration, 1)
       const eased = 1 - Math.pow(1 - progress, 3)
       setCount(Math.ceil(eased * target))
