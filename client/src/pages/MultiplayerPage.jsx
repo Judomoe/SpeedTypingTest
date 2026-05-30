@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useCallback } from 'react'
 import { io } from 'socket.io-client'
 import { useAuth } from '../context/AuthContext'
 
-const SERVER = 'https://speedtypingtest-production.up.railway.app'
+const SERVER = 'http://localhost:4000'
 
 const DIFF_C = { easy: '#57ffd8', medium: '#e8ff57', hard: '#ff6b6b' }
 
@@ -10,17 +10,20 @@ const DIFF_C = { easy: '#57ffd8', medium: '#e8ff57', hard: '#ff6b6b' }
 function RaceView({ room, socket, username, onLeave }) {
   const [typed, setTyped] = useState('')
   const [countdown, setCountdown] = useState(null)
-  const [phase, setPhase] = useState('lobby') // lobby | countdown | racing | finished
+  const [phase, setPhase] = useState('lobby')
+  const [raceText, setRaceText] = useState(room?.text || '')
   const inputRef = useRef(null)
   const typedRef = useRef('')
   const startTimeRef = useRef(null)
-  const text = room?.text || ''
+  // Use locked raceText during race; room.text for lobby preview
+  const text = phase === 'racing' ? raceText : (room?.text || raceText)
   const players = room?.players || []
   const isHost = room?.host === username
 
   useEffect(() => {
     const onCountdown = (n) => { setCountdown(n); setPhase('countdown') }
-    const onStarted = ({ text, startTime }) => {
+    const onStarted = ({ text: startedText, startTime }) => {
+      setRaceText(startedText)  // lock text — single source of truth
       setPhase('racing')
       setCountdown(null)
       startTimeRef.current = startTime

@@ -123,7 +123,7 @@ io.on('connection', socket => {
     if (!player || player.username !== room.host) return socket.emit('room:error', 'Only the host can start')
     if (room.players.size < 1) return socket.emit('room:error', 'Need at least 1 player')
 
-    room.text = randText()
+    // text is already set when room was created — don't pick a new one here
     let count = 3
     io.to(code).emit('room:countdown', count)
     room.countdown = setInterval(() => {
