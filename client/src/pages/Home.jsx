@@ -1,9 +1,10 @@
 import { Link } from 'react-router-dom'
+import { useState, useEffect } from 'react'
 
 const STATS = [
-  { n: '280K+', label: 'active typists' },
-  { n: '12M+', label: 'tests completed' },
-  { n: '147 WPM', label: 'record speed' },
+  { target: 280, suffix: 'K+', label: 'active typists' },
+  { target: 12, suffix: 'M+', label: 'tests completed' },
+  { target: 147, suffix: ' WPM', label: 'record speed' },
 ]
 
 const FEATURES = [
@@ -13,9 +14,93 @@ const FEATURES = [
   { icon: '🏆', title: 'Global Ranks', desc: 'Daily, weekly, all-time boards. Climb the ladder. Earn badges.', href: '/leaderboard', color: '#ff6b6b' },
 ]
 
+// Ease-out cubic: rockets through the start, decelerates into the final number
+function AnimatedStat({ target, suffix, label }) {
+  const [count, setCount] = useState(0)
+
+  useEffect(() => {
+    const duration = 2000
+    const startTime = performance.now()
+
+    const tick = (now: number) => {
+      const progress = Math.min((now - startTime) / duration, 1)
+      const eased = 1 - Math.pow(1 - progress, 3)
+      setCount(Math.ceil(eased * target))
+      if (progress < 1) requestAnimationFrame(tick)
+    }
+
+    requestAnimationFrame(tick)
+  }, [target])
+
+  return (
+    <div style={{ textAlign: 'center' }}>
+      <div style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 800, fontSize: 44, color: '#e8ff57', letterSpacing: '-0.03em' }}>
+        {count}{suffix}
+      </div>
+      <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 13, color: '#55556a', marginTop: 4 }}>
+        {label}
+      </div>
+    </div>
+  )
+}
+
 export default function Home() {
+  // Hide CTA section when user is logged in
+  // Change 'authToken' to whatever key your auth system stores
+  const [isLoggedIn, setIsLoggedIn] = useState(false)
+
+  useEffect(() => {
+    const token = localStorage.getItem('tc_session')
+    setIsLoggedIn(!!token)
+  }, [])
+
   return (
     <div style={{ minHeight: '100vh', paddingTop: 60 }}>
+
+      <style>{`
+        /* ── Feature cards: pop-out on hover ── */
+        .feature-card {
+          transition: transform 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.4),
+                      border-color 0.3s ease,
+                      box-shadow 0.3s ease;
+        }
+        .feature-card:hover {
+          transform: scale(1.06) translateY(-6px);
+          border-color: var(--card-color) !important;
+          box-shadow: 0 20px 40px -12px var(--card-glow);
+        }
+
+        /* ── Primary button: pop-out + yellow glow ── */
+        .btn-primary {
+          transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.4), box-shadow 0.3s ease;
+          display: inline-block;
+        }
+        .btn-primary:hover {
+          transform: scale(1.07) translateY(-3px);
+          box-shadow: 0 12px 28px -8px rgba(232, 255, 87, 0.65);
+        }
+
+        /* ── Secondary button: pop-out + subtle glow ── */
+        .btn-secondary {
+          transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.4), box-shadow 0.3s ease, border-color 0.3s ease;
+          display: inline-block;
+        }
+        .btn-secondary:hover {
+          transform: scale(1.07) translateY(-3px);
+          border-color: rgba(255,255,255,0.25) !important;
+          box-shadow: 0 12px 28px -8px rgba(255, 255, 255, 0.18);
+        }
+
+        /* ── CTA card: pop-out on hover ── */
+        .cta-card {
+          transition: transform 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.4), box-shadow 0.3s ease;
+        }
+        .cta-card:hover {
+          transform: scale(1.025) translateY(-6px);
+          box-shadow: 0 24px 50px -16px rgba(232, 255, 87, 0.18);
+        }
+      `}</style>
+
       <div style={{ position: 'fixed', inset: 0, pointerEvents: 'none', overflow: 'hidden', zIndex: 0 }}>
         <div style={{ position: 'absolute', top: '10%', left: '15%', width: 600, height: 600, borderRadius: '50%', background: 'radial-gradient(circle, rgba(232,255,87,0.04) 0%, transparent 70%)' }} />
         <div style={{ position: 'absolute', bottom: '20%', right: '10%', width: 500, height: 500, borderRadius: '50%', background: 'radial-gradient(circle, rgba(87,255,216,0.04) 0%, transparent 70%)' }} />
@@ -50,11 +135,11 @@ export default function Home() {
           </p>
 
           <div className="fade-up-4" style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap' }}>
-            <Link to="/typing" style={{
+            <Link to="/typing" className="btn-primary" style={{
               padding: '14px 32px', borderRadius: 12, fontFamily: 'Outfit, sans-serif',
               fontWeight: 700, fontSize: 16, color: '#0c0c10', background: '#e8ff57', textDecoration: 'none',
             }}>Start typing free →</Link>
-            <Link to="/courses" style={{
+            <Link to="/courses" className="btn-secondary" style={{
               padding: '14px 32px', borderRadius: 12, fontFamily: 'Outfit, sans-serif',
               fontWeight: 600, fontSize: 16, color: '#f0f0f8', textDecoration: 'none',
               border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(255,255,255,0.03)',
@@ -62,12 +147,10 @@ export default function Home() {
           </div>
         </section>
 
+        {/* Stats — eased count-up */}
         <section style={{ display: 'flex', justifyContent: 'center', gap: 64, padding: '0 24px 80px', flexWrap: 'wrap' }}>
           {STATS.map(s => (
-            <div key={s.n} style={{ textAlign: 'center' }}>
-              <div style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 800, fontSize: 44, color: '#e8ff57', letterSpacing: '-0.03em' }}>{s.n}</div>
-              <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 13, color: '#55556a', marginTop: 4 }}>{s.label}</div>
-            </div>
+            <AnimatedStat key={s.label} target={s.target} suffix={s.suffix} label={s.label} />
           ))}
         </section>
 
@@ -99,6 +182,7 @@ export default function Home() {
           </div>
         </section>
 
+        {/* Features — pop-out on hover */}
         <section style={{ maxWidth: 1100, margin: '0 auto', padding: '0 24px 120px' }}>
           <div style={{ textAlign: 'center', marginBottom: 64 }}>
             <h2 style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 800, fontSize: 44, letterSpacing: '-0.03em', marginBottom: 12 }}>Everything in one place</h2>
@@ -107,10 +191,15 @@ export default function Home() {
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 16 }}>
             {FEATURES.map(f => (
               <Link key={f.title} to={f.href} style={{ textDecoration: 'none' }}>
-                <div style={{
-                  background: '#131318', border: '1px solid rgba(255,255,255,0.06)',
-                  borderRadius: 16, padding: 28, height: '100%', cursor: 'pointer',
-                }}>
+                <div
+                  className="feature-card"
+                  style={{
+                    '--card-color': f.color,
+                    '--card-glow': `${f.color}30`,
+                    background: '#131318', border: '1px solid rgba(255,255,255,0.06)',
+                    borderRadius: 16, padding: 28, height: '100%', cursor: 'pointer',
+                  }}
+                >
                   <div style={{ fontSize: 32, marginBottom: 16 }}>{f.icon}</div>
                   <h3 style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 700, fontSize: 20, color: f.color, marginBottom: 10 }}>{f.title}</h3>
                   <p style={{ fontFamily: 'DM Sans, sans-serif', color: '#9090a8', lineHeight: 1.6, fontSize: 15 }}>{f.desc}</p>
@@ -121,20 +210,26 @@ export default function Home() {
           </div>
         </section>
 
-        <section style={{ maxWidth: 600, margin: '0 auto', padding: '0 24px 120px', textAlign: 'center' }}>
-          <div style={{
-            background: 'linear-gradient(135deg, rgba(232,255,87,0.06) 0%, rgba(87,255,216,0.06) 100%)',
-            border: '1px solid rgba(232,255,87,0.15)', borderRadius: 20, padding: '60px 40px',
-          }}>
-            <h2 style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 800, fontSize: 40, letterSpacing: '-0.03em', marginBottom: 16 }}>Ready to level up?</h2>
-            <p style={{ color: '#9090a8', marginBottom: 32, fontSize: 17 }}>Free forever. No credit card needed.</p>
-            <Link to="/register" style={{
-              display: 'inline-block', padding: '14px 36px', borderRadius: 12,
-              fontFamily: 'Outfit, sans-serif', fontWeight: 700, fontSize: 16,
-              color: '#0c0c10', background: '#e8ff57', textDecoration: 'none',
-            }}>Create free account</Link>
-          </div>
-        </section>
+        {/* CTA — hidden when logged in, pop-out on hover */}
+        {!isLoggedIn && (
+          <section style={{ maxWidth: 600, margin: '0 auto', padding: '0 24px 120px', textAlign: 'center' }}>
+            <div
+              className="cta-card"
+              style={{
+                background: 'linear-gradient(135deg, rgba(232,255,87,0.06) 0%, rgba(87,255,216,0.06) 100%)',
+                border: '1px solid rgba(232,255,87,0.15)', borderRadius: 20, padding: '60px 40px',
+              }}
+            >
+              <h2 style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 800, fontSize: 40, letterSpacing: '-0.03em', marginBottom: 16 }}>Ready to level up?</h2>
+              <p style={{ color: '#9090a8', marginBottom: 32, fontSize: 17 }}>Free forever. No credit card needed.</p>
+              <Link to="/register" className="btn-primary" style={{
+                display: 'inline-block', padding: '14px 36px', borderRadius: 12,
+                fontFamily: 'Outfit, sans-serif', fontWeight: 700, fontSize: 16,
+                color: '#0c0c10', background: '#e8ff57', textDecoration: 'none',
+              }}>Create free account</Link>
+            </div>
+          </section>
+        )}
       </div>
     </div>
   )
