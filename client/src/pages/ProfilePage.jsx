@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { getSession } from '../context/SettingsContext'
 
-const API = 'https://YOUR-RAILWAY-URL.up.railway.app/api'
+const API = 'https://speedtypingtest-production.up.railway.app/api'
 
 function StatCard({ label, value, color = '#e8ff57', sub }) {
   return (

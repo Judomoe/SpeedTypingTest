@@ -1,7 +1,7 @@
 import { createContext, useContext, useState, useEffect } from 'react'
 import { getSession, setSession, clearSession } from './SettingsContext'
 
-const API = 'https://YOUR-RAILWAY-URL.up.railway.app/api'
+const API = 'https://speedtypingtest-production.up.railway.app/api'
 const AuthContext = createContext(null)
 
 export function AuthProvider({ children }) {

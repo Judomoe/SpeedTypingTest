@@ -1,6 +1,6 @@
 import { createContext, useContext, useState, useEffect, useCallback } from 'react'
 
-const API = 'https://YOUR-RAILWAY-URL.up.railway.app/api'
+const API = 'https://speedtypingtest-production.up.railway.app/api'
 
 const DEFAULT_SETTINGS = {
   font: 'JetBrains Mono',

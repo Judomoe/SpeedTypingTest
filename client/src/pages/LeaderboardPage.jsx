@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useAuth } from '../context/AuthContext'
 
-const API = 'https://YOUR-RAILWAY-URL.up.railway.app/api'
+const API = 'https://speedtypingtest-production.up.railway.app/api'
 const MEDAL = ['🥇','🥈','🥉']
 const COUNTRY_FLAGS = { EG:'🇪🇬', US:'🇺🇸', JP:'🇯🇵', KR:'🇰🇷', DE:'🇩🇪', GB:'🇬🇧', FR:'🇫🇷', CA:'🇨🇦', SE:'🇸🇪', AU:'🇦🇺', BR:'🇧🇷', IN:'🇮🇳' }
 
